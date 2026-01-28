@@ -1,6 +1,9 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\GigApplicationController;
+use App\Http\Controllers\GigBookmarkController;
+use App\Http\Controllers\GigController;
 use App\Http\Controllers\SkillController;
 use App\Http\Controllers\VerificationController;
 use Illuminate\Support\Facades\Route;
@@ -22,4 +25,23 @@ Route::middleware(['auth:sanctum', 'check.token.expiry'])->group(function () {
 
     // Skill CRUD routes
     Route::apiResource('skills', SkillController::class);
+
+    // Gig CRUD routes
+    Route::apiResource('gigs', GigController::class);
+    Route::patch('/gigs/{gig}/close', [GigController::class, 'close']);
+    Route::patch('/gigs/{gig}/workers', [GigController::class, 'updateWorkers']);
+
+    // Gig Applications
+    Route::get('/gigs/{gig}/applications', [GigApplicationController::class, 'index'])
+        ->middleware('ensure.employer');
+    Route::post('/gigs/{gig}/applications', [GigApplicationController::class, 'store'])
+        ->middleware('ensure.freelancer');
+    Route::patch('/gigs/{gig}/applications/{application}/status', [GigApplicationController::class, 'updateStatus'])
+        ->middleware('ensure.employer');
+
+    // Gig Bookmarks
+    Route::get('/bookmarks/gigs', [GigBookmarkController::class, 'index'])
+        ->middleware('ensure.freelancer');
+    Route::post('/gigs/{gig}/bookmark', [GigBookmarkController::class, 'toggle'])
+        ->middleware('ensure.freelancer');
 });

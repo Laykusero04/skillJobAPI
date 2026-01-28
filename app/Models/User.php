@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -51,5 +52,20 @@ class User extends Authenticatable
             'password' => 'hashed',
             'role' => 'integer',
         ];
+    }
+
+    public function gigs(): HasMany
+    {
+        return $this->hasMany(Gig::class, 'employer_id');
+    }
+
+    public function gigApplications(): HasMany
+    {
+        return $this->hasMany(GigApplication::class);
+    }
+
+    public function gigBookmarks(): HasMany
+    {
+        return $this->hasMany(GigBookmark::class);
     }
 }

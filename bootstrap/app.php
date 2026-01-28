@@ -14,6 +14,8 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'check.token.expiry' => \App\Http\Middleware\CheckTokenExpiry::class,
+            'ensure.employer' => \App\Http\Middleware\EnsureUserIsEmployer::class,
+            'ensure.freelancer' => \App\Http\Middleware\EnsureUserIsFreelancer::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
