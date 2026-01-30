@@ -55,6 +55,7 @@ class GigController extends Controller
             'status' => GigStatus::Open,
             'latitude' => $request->latitude,
             'longitude' => $request->longitude,
+            'app_saving_percent' => $request->app_saving_percent ?? 0,
         ]);
 
         if ($request->supporting_skill_ids) {
@@ -115,7 +116,7 @@ class GigController extends Controller
         $data = $request->only([
             'title', 'primary_skill_id', 'location', 'pay',
             'workers_needed', 'description', 'auto_close_enabled',
-            'latitude', 'longitude',
+            'latitude', 'longitude', 'app_saving_percent',
         ]);
 
         // Recombine date+time if provided

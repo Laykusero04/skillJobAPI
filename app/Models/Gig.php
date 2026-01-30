@@ -30,12 +30,15 @@ class Gig extends Model
         'status',
         'latitude',
         'longitude',
+        'app_saving_percent',
     ];
 
     protected $appends = [
         'spots_left',
         'duration',
         'rate_per_hour',
+        'app_saving_amount',
+        'freelancer_pay',
     ];
 
     protected function casts(): array
@@ -50,6 +53,7 @@ class Gig extends Model
             'status' => GigStatus::class,
             'latitude' => 'decimal:8',
             'longitude' => 'decimal:8',
+            'app_saving_percent' => 'integer',
         ];
     }
 
@@ -128,6 +132,20 @@ class Gig extends Model
             get: fn () => $this->duration > 0
                 ? round((float) $this->pay / $this->duration, 2)
                 : 0,
+        );
+    }
+
+    protected function appSavingAmount(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => round((float) $this->pay * ($this->app_saving_percent / 100), 2),
+        );
+    }
+
+    protected function freelancerPay(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => round((float) $this->pay - $this->app_saving_amount, 2),
         );
     }
 }

@@ -33,6 +33,7 @@ class UpdateGigRequest extends FormRequest
             'auto_close_time'     => ['nullable', 'required_if:auto_close_enabled,true', 'date_format:H:i'],
             'latitude'            => ['nullable', 'required_with:longitude', 'numeric', 'between:-90,90'],
             'longitude'           => ['nullable', 'required_with:latitude', 'numeric', 'between:-180,180'],
+            'app_saving_percent'  => ['nullable', 'integer', 'between:0,100'],
         ];
     }
 
