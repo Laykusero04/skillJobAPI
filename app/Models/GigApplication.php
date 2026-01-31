@@ -12,12 +12,14 @@ class GigApplication extends Model
         'gig_id',
         'user_id',
         'status',
+        'requirement_confirmations',
     ];
 
     protected function casts(): array
     {
         return [
             'status' => ApplicationStatus::class,
+            'requirement_confirmations' => 'array',
         ];
     }
 

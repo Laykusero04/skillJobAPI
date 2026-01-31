@@ -31,6 +31,7 @@ class Gig extends Model
         'latitude',
         'longitude',
         'app_saving_percent',
+        'requirements',
     ];
 
     protected $appends = [
@@ -54,6 +55,7 @@ class Gig extends Model
             'latitude' => 'decimal:8',
             'longitude' => 'decimal:8',
             'app_saving_percent' => 'integer',
+            'requirements' => 'array',
         ];
     }
 

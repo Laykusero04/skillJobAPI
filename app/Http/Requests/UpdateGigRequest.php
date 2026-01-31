@@ -34,6 +34,8 @@ class UpdateGigRequest extends FormRequest
             'latitude'            => ['nullable', 'required_with:longitude', 'numeric', 'between:-90,90'],
             'longitude'           => ['nullable', 'required_with:latitude', 'numeric', 'between:-180,180'],
             'app_saving_percent'  => ['nullable', 'integer', 'between:0,100'],
+            'requirements'        => ['nullable', 'array'],
+            'requirements.*'      => ['string', 'max:500'],
         ];
     }
 

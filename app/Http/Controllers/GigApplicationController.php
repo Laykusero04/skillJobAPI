@@ -48,8 +48,32 @@ class GigApplicationController extends Controller
             return response()->json(['message' => 'You have already applied to this gig.'], 422);
         }
 
+        // Validate requirement_confirmations
+        $request->validate([
+            'requirement_confirmations' => ['nullable', 'array'],
+            'requirement_confirmations.*' => ['boolean'],
+        ]);
+
+        $confirmations = null;
+
+        if (is_array($gig->requirements) && count($gig->requirements) > 0) {
+            $confirmations = $request->requirement_confirmations;
+
+            if (!is_array($confirmations) || count($confirmations) !== count($gig->requirements)) {
+                return response()->json([
+                    'message' => 'requirement_confirmations length must match gig requirements.',
+                ], 422);
+            }
+
+            if (in_array(false, $confirmations, true)) {
+                return response()->json([
+                    'message' => 'All requirements must be confirmed to apply.',
+                ], 422);
+            }
+        }
+
         // Use transaction with lock to prevent race condition on spots
-        $application = DB::transaction(function () use ($gig, $user) {
+        $application = DB::transaction(function () use ($gig, $user, $confirmations) {
             $gig->lockForUpdate()->first();
 
             $acceptedCount = $gig->applications()
@@ -66,6 +90,7 @@ class GigApplicationController extends Controller
                 'gig_id' => $gig->id,
                 'user_id' => $user->id,
                 'status' => ApplicationStatus::Pending,
+                'requirement_confirmations' => $confirmations,
             ]);
         });
 

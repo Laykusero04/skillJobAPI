@@ -6,6 +6,7 @@ use App\Enums\ApplicationStatus;
 use App\Enums\GigStatus;
 use App\Http\Requests\StoreGigRequest;
 use App\Http\Requests\UpdateGigRequest;
+use App\Jobs\NotifyMatchingFreelancers;
 use App\Models\Gig;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -56,6 +57,7 @@ class GigController extends Controller
             'latitude' => $request->latitude,
             'longitude' => $request->longitude,
             'app_saving_percent' => $request->app_saving_percent ?? 0,
+            'requirements' => $request->requirements,
         ]);
 
         if ($request->supporting_skill_ids) {
@@ -69,6 +71,8 @@ class GigController extends Controller
                 $query->where('status', ApplicationStatus::Accepted->value);
             },
         ]);
+
+        NotifyMatchingFreelancers::dispatch($gig);
 
         return response()->json($gig, 201);
     }
@@ -100,9 +104,10 @@ class GigController extends Controller
 
         $response = $gig->toArray();
 
-        // Add is_bookmarked for freelancers
+        // Add is_bookmarked and has_applied for freelancers
         if ($user->role === 3) {
             $response['is_bookmarked'] = $gig->bookmarks()->where('user_id', $user->id)->exists();
+            $response['has_applied'] = $gig->applications()->where('user_id', $user->id)->exists();
         }
 
         return response()->json($response);
@@ -116,7 +121,7 @@ class GigController extends Controller
         $data = $request->only([
             'title', 'primary_skill_id', 'location', 'pay',
             'workers_needed', 'description', 'auto_close_enabled',
-            'latitude', 'longitude', 'app_saving_percent',
+            'latitude', 'longitude', 'app_saving_percent', 'requirements',
         ]);
 
         // Recombine date+time if provided
@@ -327,17 +332,23 @@ class GigController extends Controller
             $query->where('created_at', '>=', now()->subDay());
         }
 
-        // Add is_bookmarked for the current user
+        // Add is_bookmarked and has_applied for the current user
         $userId = $request->user()->id;
-        $query->withCount(['bookmarks as is_bookmarked' => function ($q) use ($userId) {
-            $q->where('user_id', $userId);
-        }]);
+        $query->withCount([
+            'bookmarks as is_bookmarked' => function ($q) use ($userId) {
+                $q->where('user_id', $userId);
+            },
+            'applications as has_applied' => function ($q) use ($userId) {
+                $q->where('user_id', $userId);
+            },
+        ]);
 
         $gigs = $query->orderBy('created_at', 'desc')->paginate(15);
 
-        // Cast is_bookmarked from count to boolean
+        // Cast is_bookmarked and has_applied from count to boolean
         $gigs->getCollection()->transform(function ($gig) {
             $gig->is_bookmarked = (bool) $gig->is_bookmarked;
+            $gig->has_applied = (bool) $gig->has_applied;
             return $gig;
         });
 

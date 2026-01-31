@@ -4,7 +4,10 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\GigApplicationController;
 use App\Http\Controllers\GigBookmarkController;
 use App\Http\Controllers\GigController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\SkillController;
+use App\Http\Controllers\UserSkillController;
+use App\Http\Controllers\FreelancerProfileController;
 use App\Http\Controllers\VerificationController;
 use Illuminate\Support\Facades\Route;
 
@@ -44,4 +47,24 @@ Route::middleware(['auth:sanctum', 'check.token.expiry'])->group(function () {
         ->middleware('ensure.freelancer');
     Route::post('/gigs/{gig}/bookmark', [GigBookmarkController::class, 'toggle'])
         ->middleware('ensure.freelancer');
+
+    // Freelancer Skills
+    Route::get('/my-skills', [UserSkillController::class, 'index'])
+        ->middleware('ensure.freelancer');
+    Route::put('/my-skills', [UserSkillController::class, 'update'])
+        ->middleware('ensure.freelancer');
+
+    // Freelancer Profile
+    Route::get('/freelancer-profile', [FreelancerProfileController::class, 'show'])
+        ->middleware('ensure.freelancer');
+    Route::patch('/freelancer-profile', [FreelancerProfileController::class, 'update'])
+        ->middleware('ensure.freelancer');
+    Route::post('/freelancer-profile/resume', [FreelancerProfileController::class, 'uploadResume'])
+        ->middleware('ensure.freelancer');
+
+    // Notifications
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
+    Route::patch('/notifications/{notification}/read', [NotificationController::class, 'markAsRead']);
+    Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
 });

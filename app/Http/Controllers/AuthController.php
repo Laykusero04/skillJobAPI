@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
+use App\Models\FreelancerProfile;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -94,7 +95,7 @@ class AuthController extends Controller
     {
         $user = $request->user();
 
-        return response()->json([
+        $response = [
             'user' => [
                 'id' => $user->id,
                 'email' => $user->email,
@@ -107,8 +108,32 @@ class AuthController extends Controller
                 'phone_verified' => !is_null($user->phone_verified_at),
                 'created_at' => $user->created_at->toIso8601String(),
                 'updated_at' => $user->updated_at->toIso8601String(),
+                'unread_notifications_count' => $user->unreadNotifications()->count(),
             ],
-        ], 200);
+        ];
+
+        // Include skills and freelancer profile for freelancers
+        if ($user->role === 3) {
+            $response['skills'] = $user->skills()->orderBy('name')->get();
+
+            $profile = FreelancerProfile::firstOrCreate(
+                ['user_id' => $user->id],
+                []
+            );
+
+            $response['freelancer_profile'] = [
+                'bio' => $profile->bio,
+                'resume_url' => $profile->resume_url,
+                'resume_uploaded_at' => $profile->resume_uploaded_at?->toIso8601String(),
+                'availability' => $profile->availability,
+                'available_today' => $profile->available_today,
+                'avg_rating' => $profile->avg_rating,
+                'completed_gigs' => $profile->completed_gigs,
+                'no_shows' => $profile->no_shows,
+            ];
+        }
+
+        return response()->json($response, 200);
     }
 
     /**

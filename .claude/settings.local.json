@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(php artisan vendor:publish:*)",
-      "Bash(php artisan:*)"
+      "Bash(php artisan:*)",
+      "Bash(if not exist \"c:\\\\xampp\\\\htdocs\\\\skillJobAPI\\\\app\\\\Notifications\" mkdir \"c:\\\\xampp\\\\htdocs\\\\skillJobAPI\\\\app\\\\Notifications\")"
     ]
   }
 }
