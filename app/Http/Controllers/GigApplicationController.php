@@ -6,6 +6,7 @@ use App\Enums\ApplicationStatus;
 use App\Enums\GigStatus;
 use App\Models\Gig;
 use App\Models\GigApplication;
+use App\Models\GigReview;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -117,10 +118,29 @@ class GigApplicationController extends Controller
         }
 
         $request->validate([
-            'status' => ['required', 'string', 'in:accepted,cancelled'],
+            'status' => ['required', 'string', 'in:accepted,rejected,cancelled'],
+            'rejection_reason' => ['nullable', 'string', 'max:500'],
         ]);
 
         $newStatus = ApplicationStatus::from($request->status);
+
+        // Rejection only applies to pending applications
+        if ($newStatus === ApplicationStatus::Rejected && $application->status !== ApplicationStatus::Pending) {
+            return response()->json(['message' => 'Only pending applications can be rejected.'], 422);
+        }
+
+        // If rejecting, set the rejection reason
+        if ($newStatus === ApplicationStatus::Rejected) {
+            $application->update([
+                'status' => ApplicationStatus::Rejected,
+                'rejection_reason' => $request->rejection_reason,
+            ]);
+
+            $application->refresh();
+            $application->load('user');
+
+            return response()->json($application);
+        }
 
         // If accepting, check spots_left within a transaction
         if ($newStatus === ApplicationStatus::Accepted) {
@@ -165,5 +185,60 @@ class GigApplicationController extends Controller
         $application->load('user');
 
         return response()->json($application);
+    }
+
+    /**
+     * Review a completed application (employer only).
+     * Also marks the application as completed if currently accepted.
+     */
+    public function review(Request $request, Gig $gig, GigApplication $application)
+    {
+        if ($gig->employer_id !== $request->user()->id) {
+            return response()->json(['message' => 'Forbidden.'], 403);
+        }
+
+        if ($application->gig_id !== $gig->id) {
+            return response()->json(['message' => 'Application does not belong to this gig.'], 404);
+        }
+
+        if ($application->status !== ApplicationStatus::Accepted && $application->status !== ApplicationStatus::Completed) {
+            return response()->json(['message' => 'Only accepted or completed applications can be reviewed.'], 422);
+        }
+
+        if ($application->review()->exists()) {
+            return response()->json(['message' => 'This application has already been reviewed.'], 422);
+        }
+
+        $request->validate([
+            'rating' => ['required', 'integer', 'min:1', 'max:5'],
+            'review' => ['nullable', 'string', 'max:2000'],
+            'earnings' => ['nullable', 'numeric', 'min:0'],
+        ]);
+
+        $earnings = $request->input('earnings', $gig->freelancer_pay);
+
+        $review = DB::transaction(function () use ($gig, $application, $request, $earnings) {
+            if ($application->status === ApplicationStatus::Accepted) {
+                $application->update(['status' => ApplicationStatus::Completed]);
+            }
+
+            return GigReview::create([
+                'gig_id' => $gig->id,
+                'employer_id' => $gig->employer_id,
+                'freelancer_id' => $application->user_id,
+                'application_id' => $application->id,
+                'rating' => $request->rating,
+                'review' => $request->review,
+                'earnings' => $earnings,
+            ]);
+        });
+
+        $application->refresh();
+        $application->load(['user', 'review']);
+
+        return response()->json([
+            'application' => $application,
+            'review' => $review,
+        ], 201);
     }
 }

@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\ApplicationStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class GigApplication extends Model
 {
@@ -13,6 +14,7 @@ class GigApplication extends Model
         'user_id',
         'status',
         'requirement_confirmations',
+        'rejection_reason',
     ];
 
     protected function casts(): array
@@ -31,5 +33,10 @@ class GigApplication extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function review(): HasOne
+    {
+        return $this->hasOne(GigReview::class, 'application_id');
     }
 }

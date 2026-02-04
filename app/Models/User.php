@@ -82,4 +82,19 @@ class User extends Authenticatable
     {
         return $this->hasOne(FreelancerProfile::class);
     }
+
+    public function penalties(): HasMany
+    {
+        return $this->hasMany(Penalty::class);
+    }
+
+    public function conversationsAsEmployer(): HasMany
+    {
+        return $this->hasMany(Conversation::class, 'employer_id');
+    }
+
+    public function conversationsAsFreelancer(): HasMany
+    {
+        return $this->hasMany(Conversation::class, 'freelancer_id');
+    }
 }

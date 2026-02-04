@@ -3,7 +3,12 @@
     "allow": [
       "Bash(php artisan vendor:publish:*)",
       "Bash(php artisan:*)",
-      "Bash(if not exist \"c:\\\\xampp\\\\htdocs\\\\skillJobAPI\\\\app\\\\Notifications\" mkdir \"c:\\\\xampp\\\\htdocs\\\\skillJobAPI\\\\app\\\\Notifications\")"
+      "Bash(if not exist \"c:\\\\xampp\\\\htdocs\\\\skillJobAPI\\\\app\\\\Notifications\" mkdir \"c:\\\\xampp\\\\htdocs\\\\skillJobAPI\\\\app\\\\Notifications\")",
+      "Bash(dir:*)",
+      "Bash(git -C /c/xampp/htdocs/skillJobAPI status --short)",
+      "Bash(git -C \"c:\\\\xampp\\\\htdocs\\\\skillJobAPI\" diff routes/api.php)",
+      "Bash(git -C \"c:\\\\xampp\\\\htdocs\\\\skillJobAPI\" diff app/Models/User.php)",
+      "Bash(ls -la \"c:\\\\xampp\\\\htdocs\\\\skillJobAPI\\\\app\\\\Http\"\" | grep \"^d \")"
     ]
   }
 }
